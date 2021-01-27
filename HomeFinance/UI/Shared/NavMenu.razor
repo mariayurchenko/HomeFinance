@@ -1,0 +1,103 @@
+﻿<div class="top-row pl-4 navbar navbar-dark">
+    <a class="navbar-brand" href="">HomeFinance</a>
+    <button class="navbar-toggler" @onclick="ToggleNavMenu">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+</div>
+
+<div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
+    <ul class="nav flex-column">
+        <li class="nav-item px-3">
+            <NavLink class="nav-link" @onclick="OpenSubMenu" style="cursor:pointer">
+                <span class="oi oi-home" aria-hidden="true"></span> Home
+            </NavLink>
+            <ul>
+                <li class="nav-item px-3" style="display:@openclose">
+                    <NavLink class="nav-link" href="payment">
+                        <span aria-hidden="true"></span> Оплата
+                    </NavLink>
+                </li>
+                <li class="nav-item px-3" style="display:@openclose">
+                    <NavLink class="nav-link" href="admission">
+                        <span aria-hidden="true"></span> Поступление
+                    </NavLink>
+                </li>
+            </ul>
+        </li>
+        <li class="nav-item px-3">
+            <NavLink class="nav-link" @onclick="CategoryMenu" style="cursor:pointer">
+                <span class="oi oi-plus" aria-hidden="true"></span> Категория
+            </NavLink>
+            <ul>
+                <li class="nav-item px-3" style="display:@category">
+                    <NavLink class="nav-link" href="expense">
+                        <span aria-hidden="true"></span> Расходы
+                    </NavLink>
+                </li>
+                <li class="nav-item px-3" style="display:@category">
+                    <NavLink class="nav-link" href="income">
+                        <span aria-hidden="true"></span> Доходы
+                    </NavLink>
+                </li>
+            </ul>
+        </li>
+        <li class="nav-item px-3">
+            <NavLink class="nav-link" @onclick="AnalysisMenu" style="cursor:pointer">
+                <span class="oi oi-list-rich" aria-hidden="true"></span> Анализ
+            </NavLink>
+            <ul>
+                <li class="nav-item px-3" style="display:@analysis">
+                    <NavLink class="nav-link" href="day">
+                        <span aria-hidden="true"></span> Ежедневный
+                    </NavLink>
+                </li>
+                <li class="nav-item px-3" style="display:@analysis">
+                    <NavLink class="nav-link" href="month">
+                        <span aria-hidden="true"></span> Месячный
+                    </NavLink>
+                </li>
+            </ul>
+        </li>
+    </ul>
+</div>
+
+@code {
+    private bool collapseNavMenu = true;
+
+    private string NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+}
+@code {
+
+    string category = "none";
+    string analysis = "none";
+    string openclose = "none";
+
+    void OpenSubMenu()
+    {
+        if (openclose == "none")
+            openclose = "block";
+        else
+            openclose = "none";
+    }
+
+    void AnalysisMenu()
+    {
+        if (analysis == "none")
+            analysis = "block";
+        else
+            analysis = "none";
+    }
+
+    void CategoryMenu()
+    {
+        if (category == "none")
+            category = "block";
+        else
+            category = "none";
+    }
+}

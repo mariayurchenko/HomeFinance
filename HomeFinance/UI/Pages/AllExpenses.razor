@@ -1,0 +1,58 @@
+﻿@page "/expense"
+@inject HttpClient http;
+@using Model;
+@using UI.Services;
+
+<h1>Расходы:</h1>
+<br>
+<table>
+    <tr>
+        <th>
+            <input @bind="newItemName">
+        </th>
+        <th><button class="add" @onclick="@AddItem">Добавить</button></th>
+    </tr>
+    @foreach (var expense in Expenses)
+    {
+        <tr>
+            <td>@expense.Name</td>
+            <td><button class="delete" @onclick="() => DeleteItem(expense.Id)">Delete</button></td>
+        </tr>
+    }
+</table>
+
+
+@code{
+
+    private List<Expense> Expenses = new List<Expense>();
+    private ExpenseService _expenseService;
+
+    private async Task GetExpense()
+    {
+        await _expenseService.FillList();
+        Expenses = _expenseService.GetExpenses();
+    }
+
+    private async Task DeleteItem(int id)
+    {
+        await _expenseService.DeleteExpense(id);
+        await GetExpense();
+    }
+
+    private string newItemName;
+
+    private async Task AddItem()
+    {
+        Expense addItem = new Expense { Name = newItemName };
+        await _expenseService.AddExpense(addItem);
+        newItemName = "";
+        await GetExpense();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _expenseService = new ExpenseService(http);
+        await GetExpense();
+    }
+
+}

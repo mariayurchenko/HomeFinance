@@ -1,0 +1,59 @@
+﻿@page "/income"
+@inject HttpClient http;
+@using Model;
+@using UI.Services;
+
+
+<h1>Доходы:</h1>
+<br>
+<table>
+    <tr>
+        <th>
+            <input @bind="newItemName">
+        </th>
+        <th><button class="add" @onclick="@AddItem">Добавить</button></th>
+    </tr>
+    @foreach (var income in Incomes)
+    {
+        <tr>
+            <td>@income.Name</td>
+            <td><button class="delete" @onclick="() => DeleteItem(income.Id)">Delete</button></td>
+        </tr>
+    }
+</table>
+
+
+@code{
+
+    private List<Income> Incomes = new List<Income>();
+    private IncomeService _incomeService;
+
+    private async Task GetIncome()
+    {
+        await _incomeService.FillList();
+        Incomes = _incomeService.GetIncomes();
+    }
+
+    private async Task DeleteItem(int id)
+    {
+        await _incomeService.DeleteIncome(id);
+        await GetIncome();
+    }
+
+    private string newItemName;
+
+    private async Task AddItem()
+    {
+        Income addItem = new Income { Name = newItemName };
+        await _incomeService.AddIncome(addItem);
+        newItemName = "";
+        await GetIncome();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _incomeService = new IncomeService(http);
+        await GetIncome();
+    }
+
+}

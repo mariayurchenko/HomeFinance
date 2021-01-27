@@ -1,0 +1,93 @@
+﻿@page "/admission"
+@inject HttpClient http;
+@inject IJSRuntime JsRuntime;
+@using Model;
+@using UI.Services;
+
+
+<h3>Поступление:</h3>
+<br>
+
+<EditForm Model="@NewAdmission" OnValidSubmit="@AddItem">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+    <table>
+        <tr>
+            <th>Сумма: </th>
+            <th>
+                <InputNumber id="amount" @bind-Value="NewAdmission.Amount" />
+            </th>
+        </tr>
+        <tr>
+            <th>Категория: </th>
+            <th>
+                <InputSelect @bind-Value="incomeID" id="incomeid">
+                    @foreach (Income i in Incomes)
+                    {
+                        <option value="@i.Id">@i.Name</option>
+                    }
+                </InputSelect>
+            </th>
+        </tr>
+        <tr>
+            <th>Дата: </th>
+            <th>
+                <InputDate id="date" @bind-Value="NewAdmission.Date" />
+            </th>
+        </tr>
+        <tr>
+            <th>Примечание: </th>
+            <th>
+                <InputText id="description" @bind-Value="NewAdmission.Description" />
+            </th>
+        </tr>
+        <tr>
+            <th>
+                <button class="add" type="submit">Записать</button>
+            </th>
+            <th></th>
+        </tr>
+    </table>
+</EditForm>
+
+
+@code {
+
+    private List<Income> Incomes = new List<Income>();
+    private Admission NewAdmission = new Admission { };
+    private string incomeID;
+    private AdmissionService _admissionService;
+    private IncomeService _incomeService;
+
+    private async Task GetIncome()
+    {
+        await _incomeService.FillList();
+        Incomes = _incomeService.GetIncomes();
+    }
+
+    private async void AddItem()
+    {
+        try
+        {
+            int id = Int32.Parse((string)incomeID);
+            NewAdmission.IncomeID = id;
+            await _admissionService.AddAdmission(NewAdmission);
+            NewAdmission = new Admission { Date = DateTime.Today };
+            bool confirmed = await JsRuntime.InvokeAsync<bool>("confirm", "Новое поступление добавлено!");
+        }
+        catch (Exception message)
+        {
+            bool confirmed = await JsRuntime.InvokeAsync<bool>("confirm", message.Message);
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _admissionService = new AdmissionService(http);
+        _incomeService = new IncomeService(http);
+        await GetIncome();
+        NewAdmission.Date = DateTime.Today;
+        incomeID = Convert.ToString(Incomes[0].Id);
+    }
+
+}

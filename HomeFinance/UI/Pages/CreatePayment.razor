@@ -1,0 +1,93 @@
+﻿@page "/payment"
+@inject HttpClient http;
+@inject IJSRuntime JsRuntime;
+@using Model;
+@using UI.Services;
+
+
+<h3>Оплата:</h3>
+<br>
+
+<EditForm Model="@NewPayment" OnValidSubmit="@AddItem">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+    <table>
+        <tr>
+            <th>Сумма: </th>
+            <th>
+                <InputNumber id="amount" @bind-Value="NewPayment.Amount" />
+            </th>
+        </tr>
+        <tr>
+            <th>Категория: </th>
+            <th>
+                <InputSelect @bind-Value="expenseID" id="expenseID">
+                    @foreach (Expense i in Expenses)
+                    {
+                        <option value="@i.Id">@i.Name</option>
+                    }
+                </InputSelect>
+            </th>
+        </tr>
+        <tr>
+            <th>Дата: </th>
+            <th>
+                <InputDate id="date" @bind-Value="NewPayment.Date" />
+            </th>
+        </tr>
+        <tr>
+            <th>Примечание: </th>
+            <th>
+                <InputText id="description" @bind-Value="NewPayment.Description" />
+            </th>
+        </tr>
+        <tr>
+            <th>
+                <button class="add" type="submit">Записать</button>
+            </th>
+            <th></th>
+        </tr>
+    </table>
+</EditForm>
+
+
+@code {
+
+    private List<Expense> Expenses = new List<Expense>();
+    private Payment NewPayment = new Payment { };
+    private string expenseID;
+    private ExpenseService _expenseService;
+    private PaymentService _paymentService;
+
+    private async Task GetExpenses()
+    {
+        await _expenseService.FillList();
+        Expenses = _expenseService.GetExpenses();
+    }
+
+    private async void AddItem()
+    {
+        try
+        {
+            int id = Int32.Parse((string)expenseID);
+            NewPayment.ExpenseID = id;
+            await _paymentService.AddPayment(NewPayment);
+            NewPayment = new Payment { Date = DateTime.Today };
+            bool confirmed = await JsRuntime.InvokeAsync<bool>("confirm", "Новая оплата добавлена!");
+        }
+        catch (Exception message)
+        {
+            bool confirmed = await JsRuntime.InvokeAsync<bool>("confirm", message.Message);
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _expenseService = new ExpenseService(http);
+        _paymentService = new PaymentService(http);
+        await GetExpenses();
+        NewPayment.Date = DateTime.Today;
+        expenseID = Convert.ToString(Expenses[0].Id);
+    }
+
+}

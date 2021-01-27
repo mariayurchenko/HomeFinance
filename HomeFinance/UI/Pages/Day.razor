@@ -1,0 +1,107 @@
+﻿@page "/day"
+@inject HttpClient http;
+@using Model;
+@using UI.Services;
+@using System.Globalization;
+
+
+
+<h1>Ежедневный анализ доходов и расходов:</h1>
+<br>
+<div class="flex-container">
+    <div class="first">
+        <br>
+        <ul class="hr">
+            <li>За</li>
+            <li> <input type="date" @bind="date"></li>
+            <li><button class="analyze" @onclick="@GetAnalyze">Анализировать</button></li>
+        </ul>
+    </div>
+    <div class="second">
+        @if (cashAccount != null)
+        {
+            <h3>Итого:</h3>
+            <h2><span style="color:greenyellow">@cashAccount.Admission</span> - <span style="color:red">@cashAccount.Payment</span> = <span style="color: darkgreen; font-weight: bold;">@cashAccount.Balance</span></h2>
+        }
+    </div>
+</div>
+<br>
+@if (cashAccount != null)
+{
+    <hr>
+    <br>
+    <div class="flex-container">
+        <div class="first">
+            <h3 style="color:greenyellow">Поступление:</h3>
+            <table>
+                <tr>
+                    <th>Категория</th>
+                    <th>Примечание</th>
+                    <th>Сумма</th>
+                </tr>
+                @foreach (var admission in Admissions)
+                {
+                    <tr>
+                        <td>@admission.Income.Name</td>
+                        <td>@admission.Description</td>
+                        <td style="color:greenyellow">@admission.Amount</td>
+                    </tr>
+                }
+            </table>
+        </div>
+        <div class="second">
+            <h3 style="color:red">Оплата:</h3>
+            <table>
+                <tr>
+                    <th>Категория</th>
+                    <th>Примечание</th>
+                    <th>Сумма</th>
+                </tr>
+                @foreach (var payment in Payments)
+                {
+                    <tr>
+                        <td>@payment.Expense.Name</td>
+                        <td>@payment.Description</td>
+                        <td style="color:red">@payment.Amount</td>
+                    </tr>
+                }
+            </table>
+        </div>
+    </div>
+}
+
+
+@code {
+    private CashAccount cashAccount = null;
+    private DateTime date = DateTime.Today;
+    private SumService _sumService;
+    private List<Payment> Payments = new List<Payment>();
+    private List<Admission> Admissions = new List<Admission>();
+    private AdmissionService _admissionService;
+    private PaymentService _paymentService;
+
+    private async Task GetAnalyze()
+    {
+        try
+        {
+            string datetime = date.ToString("yyyy.MM.dd");
+            await _sumService.AnalzeDay(datetime);
+            cashAccount = _sumService.CashAccount;
+            await _admissionService.FillListDayAdmissions(datetime);
+            Admissions = _admissionService.GetAdmissions();
+            await _paymentService.FillListDayPayments(datetime);
+            Payments = _paymentService.GetPayments();
+        }
+        catch (ArgumentException e)
+        {
+
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _sumService = new SumService(http);
+        _admissionService = new AdmissionService(http);
+        _paymentService = new PaymentService(http);
+    }
+}
